@@ -63,8 +63,8 @@ const mama: TreasureConfig = {
       name: "einde",
       question: "",
       answer: "",
-      latitude: 50.7776053,
-      longitude: 5.448924
+      latitude: 50.7774776,
+      longitude: 5.4488663
     }
   ]
 };
