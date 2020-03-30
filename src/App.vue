@@ -12,76 +12,107 @@
         opacity: 0.2
       }"
     />
-    <div
-      :style="{
-        position: 'fixed',
-        width: '100%',
-        fontSize: 'xx-large',
-        top: '5%'
-      }"
-    >
-      Ga naar punt {{ index + 1 }}
-    </div>
-
-    <img
-      v-if="!sad && !thumb"
-      :src="require('@/assets/compass.png')"
-      class="imageloc"
-      :style="{
-        opacity: 0.3,
-        transform: `rotate(${compass}deg)`
-      }"
-    />
-
-    <img
-      v-if="!sad && !thumb"
-      :src="require('@/assets/arrow.png')"
-      class="imageloc"
-      :style="{
-        transform: `rotate(${compass + dir}deg)`
-      }"
-    />
-
-    <img
-      :src="require('@/assets/thumbsup.png')"
-      v-if="thumb"
-      class="imageloc"
-    />
-    <img :src="require('@/assets/sad.png')" v-if="sad" class="imageloc" />
-
-    <div
-      :style="{
-        position: 'fixed',
-        width: '100%',
-        fontSize: 'xx-large',
-        bottom: '30%'
-      }"
-    >
-      {{ distance }} m <br>
-      <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i>
-    </div>
-
-    <div
-      :style="{
-        position: 'fixed',
-        width: '100%',
-        fontSize: 'larger',
-        bottom: '15%'
-      }"
-    >
-      <div v-if="index < numRiddles - 1">
-        Vind de puzzel en los hem op:<br />
-        <input type="text" v-model="answer" placeholder="jou antwoord" /><br />
-        <button @click="checkAnswer">OK</button><br />
-        {{ message }}
+    <div v-if="config !== null">
+      <div
+        :style="{
+          position: 'fixed',
+          width: '100%',
+          fontSize: 'xx-large',
+          top: '5%'
+        }"
+      >
+        {{ name }} <br /> Ga naar punt {{ index + 1 }}
       </div>
-      <p v-else>
-        Je bent er bijna, ga naar het laatste punt en vind de schat.
-      </p>
+      <img
+        v-if="!sad && !thumb"
+        :src="require('@/assets/compass.png')"
+        class="imageloc"
+        :style="{
+          opacity: 0.3,
+          transform: `rotate(${compass}deg)`
+        }"
+      />
+
+      <img
+        v-if="!sad && !thumb"
+        :src="require('@/assets/arrow.png')"
+        class="imageloc"
+        :style="{
+          transform: `rotate(${compass + dir}deg)`
+        }"
+      />
+
+      <img
+        :src="require('@/assets/thumbsup.png')"
+        v-if="thumb"
+        class="imageloc"
+      />
+      <img :src="require('@/assets/sad.png')" v-if="sad" class="imageloc" />
+
+      <div
+        :style="{
+          position: 'fixed',
+          width: '100%',
+          fontSize: 'xx-large',
+          bottom: '30%'
+        }"
+      >
+        {{ distance }} m <br>
+        <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i>
+      </div>
+
+      <div
+        :style="{
+          position: 'fixed',
+          width: '100%',
+          fontSize: 'larger',
+          bottom: '15%'
+        }"
+      >
+        <div v-if="index < numRiddles - 1 && distance < 80">
+          {{ currentQuestion }} <br />
+          <input type="text" v-model="answer" placeholder="jou antwoord" /><br />
+          <button @click="checkAnswer">OK</button><br />
+          {{ message }}
+        </div>
+        <p v-else-if="index >= numRiddles - 1">
+          Je bent er bijna, ga naar het laatste punt en vind de schat.
+        </p>
+      </div>
+      <button @click="restart" style="position: fixed; right: 0%; bottom: 0%">
+        Restart
+      </button>
     </div>
-    <button @click="restart" style="position: fixed; right: 0%; bottom: 0%">
-      Restart
-    </button>
+    <div v-else-if="name === 'debug'">
+      <div
+        :style="{
+          position: 'fixed',
+          width: '100%',
+          fontSize: 'large',
+          bottom: '30%'
+        }"
+      >
+        latitude: {{ lat }} <br />
+        longitude: {{ lon }} <br />
+        naam: <input type="text" v-model="qname" placeholder="name" /><br />
+        vraag: <input type="text" v-model="question" placeholder="question" /><br />
+        antwoord: <input type="text" v-model="answer" placeholder="jou antwoord" /><br /><br />
+        <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i><br />
+        <button @click="copyToClipboard">COPY</button><br />
+      </div>
+    </div>
+    <div v-else>
+      <div
+        :style="{
+          position: 'fixed',
+          width: '100%',
+          fontSize: 'xx-large',
+          top: '45%'
+        }"
+      >
+        Onbekende link
+      </div>
+    </div>
   </div>
 </template>
 
@@ -89,7 +120,7 @@
 /* eslint-disable */
 import Vue from "vue"
 import { headingDistanceTo } from 'geolocation-utils'
-import config from '@/configs/kirsten'
+import { getConfig, TreasureConfig } from '@/configs'
 import Cookies from 'js-cookie'
 
 export default Vue.extend({
@@ -106,7 +137,11 @@ export default Vue.extend({
     thumb: false,
     sad: false,
     answer: '',
-    message: ''
+    message: '',
+    question: '',
+    name: '',
+    qname: '',
+    config: null as null | TreasureConfig
   }),
   mounted() {
     navigator.geolocation.watchPosition(
@@ -122,18 +157,47 @@ export default Vue.extend({
     if (level) {
       this.index = parseInt(level)
     }
+    if (this.$route.query.name) {
+      const name = '' + this.$route.query.name
+      this.config = getConfig(name)
+      if (this.config !== null) {
+        this.name = this.config.name
+      }
+      if (name === 'debug') {
+        this.name = 'debug'
+      }
+    }
   },
   computed: {
     target(): number[] {
-      return [config.riddles[this.index].latutide, config.riddles[this.index].longitude]
+      if (this.config === null) {
+        return [0, 0]
+      }
+      return [this.config.riddles[this.index].latitude, this.config.riddles[this.index].longitude]
+    },
+    currentQuestion() : string {
+      if (this.config === null) {
+        return ''
+      }
+      const q = this.config.riddles[this.index].question
+      if (q === '') {
+        return 'Vind de puzzel en los hem op'
+      }
+      return q
     },
     numRiddles(): number {
-      return config.riddles.length
+      if (this.config === null) {
+        return 0
+      }
+      return this.config.riddles.length
     }
   },
   methods: {
-    checkAnswer () {
-      if (config.riddles[this.index].answer === this.answer.toLowerCase()) {
+    checkAnswer (): void {
+      if (this.config === null) {
+        return
+      }
+      if (this.config.riddles[this.index].answer === this.answer.toLowerCase()) {
         this.message = 'Proficiat, het is je gelukt'
         this.thumb = true
         setTimeout(() => {
@@ -174,6 +238,20 @@ export default Vue.extend({
         Cookies.set('level', '0')
         this.index = 0
       }
+    },
+    copyToClipboard () {
+      const el = document.createElement('textarea')
+      el.value = '{\n'
+      el.value += ` name: "${this.qname}",\n`
+      el.value += ` question: "${this.question}",\n`
+      el.value += ` answer: "${this.answer}",\n`
+      el.value += ` latitude: ${this.lat},\n`
+      el.value += ` longitude: ${this.lon}\n`
+      el.value += '}'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
     }
   }
 });
