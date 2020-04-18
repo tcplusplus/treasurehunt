@@ -1,7 +1,7 @@
-import { TreasureConfig } from '.'
+import { TreasureConfig } from ".";
 
 const mama: TreasureConfig = {
-  name: 'Mama en Papa',
+  name: "Mama en Papa",
   riddles: [
     {
       name: "volt",
@@ -12,7 +12,8 @@ const mama: TreasureConfig = {
     },
     {
       name: "lijninspectie",
-      question: "Wat zijn de laatste 3 cijfers van het telefoonnummer van de lijninspectie?",
+      question:
+        "Wat zijn de laatste 3 cijfers van het telefoonnummer van de lijninspectie?",
       answer: "611",
       latitude: 50.7697741,
       longitude: 5.438001
@@ -69,4 +70,4 @@ const mama: TreasureConfig = {
   ]
 };
 
-export default mama
+export default mama;

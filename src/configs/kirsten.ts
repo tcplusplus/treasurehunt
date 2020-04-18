@@ -1,7 +1,7 @@
-import { TreasureConfig } from '.'
+import { TreasureConfig } from ".";
 
 const kirsten: TreasureConfig = {
-  name: 'Kirsten',
+  name: "Kirsten",
   riddles: [
     {
       name: "sudoku",
@@ -49,4 +49,3 @@ const kirsten: TreasureConfig = {
 };
 
 export default kirsten;
-
