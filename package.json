@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@types/js-cookie": "^2.2.5",
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.11.0",
     "cookies-js": "^1.2.3",
     "core-js": "^3.6.4",
     "geolib": "^3.2.1",

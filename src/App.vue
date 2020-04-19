@@ -8,6 +8,37 @@
       <div class="heading" v-else-if="isCheckpoint">Goed bezig!</div>
       <div class="heading" v-else-if="sad">Verkeerd, probeer opnieuw!</div>
       <div class="heading" v-else-if="thumb">Correct!</div>
+
+      <div class="hints" v-if="hintsAvailable">
+        <b-button
+          pill
+          id="popover-target-1"
+          style="padding: 0px"
+          :variant="availableHints.length > 0 ? 'success' : 'secondary'"
+        >
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Questionmark.svg/1200px-Questionmark.svg.png"
+            width="100%"
+          />
+        </b-button>
+        {{ nextHint }}
+        <b-popover target="popover-target-1" triggers="hover" placement="top">
+          <template v-slot:title>
+            Hints
+          </template>
+          <div v-if="availableHints.length === 0">
+            Nog geen hints beschikbaar
+          </div>
+          <ul v-else>
+            <li
+              v-for="(hint, index) in availableHints"
+              :key="index"
+              v-html="hint"
+            />
+          </ul>
+        </b-popover>
+      </div>
+
       <!-- compass -->
       <img
         v-if="!popupImage"
@@ -37,28 +68,33 @@
       <div class="answer" v-if="!popupImage && !isCheckpoint">
         <div v-if="index < numRiddles - 1 && closeEnough">
           {{ currentQuestion }} <br />
-          <input
+          <b-form-input
             type="text"
             v-model="answer"
             placeholder="jou antwoord"
-          /><br />
-          <button @click="checkAnswer">OK</button><br />
+          />
+          <b-button @click="checkAnswer">OK</b-button><br />
           {{ message }}
         </div>
         <p v-else-if="index >= numRiddles - 1">
           Je bent er bijna, ga naar het laatste punt en vind de schat.
         </p>
       </div>
-      <button @click="restart" style="position: fixed; right: 0%; bottom: 0%">
+      <b-button
+        variant="outline-primary"
+        @click="restart"
+        style="position: fixed; right: 0%; bottom: 0%"
+      >
         Restart
-      </button>
-      <button
+      </b-button>
+      <b-button
+        variant="outline-primary"
         @click="openMaps"
         style="position: fixed; left: 0%; bottom: 0%"
         v-if="replay"
       >
         Maps
-      </button>
+      </b-button>
     </div>
     <div v-else-if="name === 'debug'">
       <div
@@ -91,14 +127,22 @@
   </div>
 </template>
 
-<style lang="scss" src="./App.scss"></style>
-
 <script lang="ts">
 /* eslint-disable */
 import Vue from "vue";
+import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
 import { headingDistanceTo } from "geolocation-utils";
 import { getConfig, TreasureConfig, Riddle } from "@/configs";
 import Cookies from "js-cookie";
+
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+import './App.scss'
+
+// Install BootstrapVue
+Vue.use(BootstrapVue)
+// Optionally install the BootstrapVue icon components plugin
+Vue.use(IconsPlugin)
 
 export default Vue.extend({
   name: "App",
@@ -119,6 +163,7 @@ export default Vue.extend({
     name: "",
     qname: "",
     time: 0,
+    timeCloseEnough: 0,
     replay: false,
     config: null as null | TreasureConfig,
   }),
@@ -130,6 +175,9 @@ export default Vue.extend({
     });
     setInterval(() => {
       this.time += 1;
+      if (this.closeEnough) {
+        this.timeCloseEnough += 1;
+      }
     }, 1000);
     const level: string | undefined = Cookies.get("level");
     if (level) {
@@ -161,6 +209,7 @@ export default Vue.extend({
       }
     },
     index() {
+      this.timeCloseEnough = 0
       if (this.config !== null && this.replay) {
         this.config.minDistance = 20
         setTimeout(() => {
@@ -177,6 +226,44 @@ export default Vue.extend({
         return this.config.riddles[this.index];
       }
       return undefined;
+    },
+    nextHint(): string {
+      if (this.currentRiddle === undefined || this.currentRiddle.hints === undefined) {
+        return ''
+      }
+      let timeleft = 3600
+      for (const hint of this.currentRiddle.hints) {
+        const hinttimeleft = hint.timeout - this.timeCloseEnough
+        console.log('hint time left', hinttimeleft)
+        if (hinttimeleft > 0 && hinttimeleft < timeleft) {
+          timeleft = hinttimeleft
+        }
+      }
+      if (timeleft === 3600) {
+        return ''
+      }
+      const minutes = Math.floor(timeleft / 60)
+      const seconds = timeleft - minutes * 60
+      if (seconds < 10) {
+        return `${minutes}:0${seconds}`
+      }
+      return `${minutes}:${seconds}`
+    },
+    availableHints(): string[] {
+      if (this.currentRiddle === undefined || this.currentRiddle.hints === undefined) {
+        return []
+      }
+      const hints: string[] = []
+      for (const hint of this.currentRiddle.hints) {
+        const hinttimeleft = hint.timeout - this.timeCloseEnough
+        if (hinttimeleft < 0) {
+          hints.push(hint.text)
+        }
+      }
+      return hints
+    },
+    hintsAvailable() : boolean {
+      return this.closeEnough && this.currentRiddle !== undefined && this.currentRiddle.hints !== undefined && !this.popupImage
     },
     popupImage(): string {
       if (this.sad) {

@@ -1,6 +1,7 @@
 import kirsten from "./kirsten";
 import mama from "./mama";
 import deborah from "./deborah";
+import simon from "./simon";
 
 export interface Riddle {
   name: string;
@@ -13,6 +14,10 @@ export interface Riddle {
   backgroundImage?: string;
   correctImage?: string;
   wrongImage?: string;
+  hints?: {
+    text: string;
+    timeout: number;
+  }[];
 }
 
 export interface TreasureConfig {
@@ -29,6 +34,8 @@ export const getConfig = (name: string): TreasureConfig | null => {
     return kirsten;
   } else if (name === "deborah") {
     return deborah;
+  } else if (name === "simon") {
+    return simon;
   }
   return null;
 };

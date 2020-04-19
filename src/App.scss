@@ -21,6 +21,15 @@
     width: 95%;
     font-size: xx-large;
     top: 5%;
+    line-height:30px;
+  }
+  .hints {
+    position: fixed;
+    width: 10%;
+    height: 10%;
+    top: 1.5%;
+    left: 1.5%;
+    font-size: small;
   }
   .compassloc {
     width: 80%;
@@ -37,14 +46,17 @@
   .distance {
     position: fixed;
     width: 100%;
-    font-size: xx-large;
-    bottom: 30%;
+    font-size: x-large;
+    bottom: 32%;
+    line-height:22px;
   }
   .answer {
     position: fixed;
-    width: 95%;
+    width: 90%;
+    left: 5%;
     font-size: larger;
-    bottom: 15%;
+    bottom: 10%;
+    line-height:20px;
   }
   .errorlink {
     position: fixed;
