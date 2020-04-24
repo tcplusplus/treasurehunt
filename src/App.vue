@@ -134,6 +134,7 @@ import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
 import { headingDistanceTo } from "geolocation-utils";
 import { getConfig, TreasureConfig, Riddle } from "@/configs";
 import Cookies from "js-cookie";
+const accents = require('remove-accents');
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -234,7 +235,6 @@ export default Vue.extend({
       let timeleft = 3600
       for (const hint of this.currentRiddle.hints) {
         const hinttimeleft = hint.timeout - this.timeCloseEnough
-        console.log('hint time left', hinttimeleft)
         if (hinttimeleft > 0 && hinttimeleft < timeleft) {
           timeleft = hinttimeleft
         }
@@ -353,7 +353,10 @@ export default Vue.extend({
       if (this.config === null) {
         return;
       }
-      if (this.isCheckpoint || this.config.riddles[this.index].answer === this.answer.toLowerCase()) {
+      let answer = this.answer.toLowerCase();
+      answer = answer.trim();
+      answer = accents.remove(answer);
+      if (this.isCheckpoint || this.config.riddles[this.index].answer === answer) {
         this.message = "Proficiat, het is je gelukt";
         this.thumb = true;
         setTimeout(() => {

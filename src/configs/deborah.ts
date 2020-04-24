@@ -216,9 +216,13 @@ const deborah: TreasureConfig = {
       correctImage: "https://data.whicdn.com/images/85904165/original.jpg",
       hints: [
         {
+          text: "Kijk onder stenen.",
+          timeout: 600
+        },
+        {
           text:
             "<img src='https://vignette.wikia.nocookie.net/aliceinwonderland/images/2/25/Dinah.jpg/revision/latest/scale-to-width-down/340?cb=20100313211328' width='100%'>",
-          timeout: 600
+          timeout: 900
         },
         {
           text: "Het antwoord is dinah",
