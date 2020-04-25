@@ -66,7 +66,9 @@
 
         <div class="distance" v-if="!popupImage">
           {{ distance }} m <br />
-          <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i>
+          <i style="font-size: small"
+            >{{ Math.floor(accuracy) }} m nauwkeurig</i
+          >
         </div>
 
         <div class="answer" v-if="!popupImage && !isCheckpoint">
@@ -130,9 +132,9 @@
       </div>
     </div>
     <div v-else style="position: fixed; width: 100%; top: 30%;">
-      Zet je geluid aan voor extra effect!<br>
+      Zet je geluid aan voor extra effect!<br />
       Ben je er klaar voor?
-      <br>
+      <br />
       <b-button @click="startTheGame" variant="success">KLAAR !</b-button><br />
     </div>
   </div>
@@ -161,7 +163,7 @@ Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 
 export default Vue.extend({
-  name: "App",
+  name: "Game",
   data: () => ({
     lat: 0,
     lon: 0,
@@ -343,7 +345,7 @@ export default Vue.extend({
       return false;
     },
     audioUrl (): string {
-      if (this.config && this.config.introAudio) {
+      if (this.config && this.config.introAudio && this.index === 0) {
         return this.config.introAudio;
       }
       if (this.currentRiddle && this.currentRiddle.closeAudio && this.closeEnough) {

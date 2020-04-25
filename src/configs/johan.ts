@@ -256,7 +256,8 @@ const johan: TreasureConfig = {
       backgroundImage: "https://tompi.ddns.net/images/starwarseinde.png",
       hints: [
         {
-          text: "Foto maken",
+          text:
+            "<img src='https://tompi.ddns.net/images/tipeinde.jpg' width='100%'>",
           timeout: 900
         }
       ]
