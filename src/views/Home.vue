@@ -1,131 +1,139 @@
 <template>
   <div id="app" class="app">
     <div :style="backgroundStyle" class="background" />
-    <div v-if="config !== null">
-      <div class="heading" v-if="!popupImage">
-        {{ name }} <br />Ga naar punt {{ index + 1 }}
-      </div>
-      <div class="heading" v-else-if="isCheckpoint">Goed bezig!</div>
-      <div class="heading" v-else-if="sad">Verkeerd, probeer opnieuw!</div>
-      <div class="heading" v-else-if="thumb">Correct!</div>
+    <div v-if="started">
+      <div v-if="config !== null">
+        <div class="heading" v-if="!popupImage">
+          {{ name }} <br />Ga naar punt {{ index + 1 }}
+        </div>
+        <div class="heading" v-else-if="isCheckpoint">Goed bezig!</div>
+        <div class="heading" v-else-if="sad">Verkeerd, probeer opnieuw!</div>
+        <div class="heading" v-else-if="thumb">Correct!</div>
 
-      <audio v-if="audioUrl" autoplay>
-        <source :src="audioUrl" type="audio/mpeg" />
-      </audio>
-      <div class="hints" v-if="hintsAvailable">
-        <b-button
-          pill
-          id="popover-target-1"
-          style="padding: 0px"
-          :variant="availableHints.length > 0 ? 'success' : 'secondary'"
-        >
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Questionmark.svg/1200px-Questionmark.svg.png"
-            width="100%"
-          />
-        </b-button>
-        {{ nextHint }}
-        <b-popover target="popover-target-1" triggers="hover" placement="top">
-          <template v-slot:title>
-            Hints
-          </template>
-          <div v-if="availableHints.length === 0">
-            Nog geen hints beschikbaar
-          </div>
-          <ul v-else>
-            <li
-              v-for="(hint, index) in availableHints"
-              :key="index"
-              v-html="hint"
+        <audio v-if="audioUrl" autoplay>
+          <source :src="audioUrl" type="audio/mpeg" />
+        </audio>
+        <div class="hints" v-if="hintsAvailable">
+          <b-button
+            pill
+            id="popover-target-1"
+            style="padding: 0px"
+            :variant="availableHints.length > 0 ? 'success' : 'secondary'"
+          >
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Questionmark.svg/1200px-Questionmark.svg.png"
+              width="100%"
             />
-          </ul>
-        </b-popover>
+          </b-button>
+          {{ nextHint }}
+          <b-popover target="popover-target-1" triggers="hover" placement="top">
+            <template v-slot:title>
+              Hints
+            </template>
+            <div v-if="availableHints.length === 0">
+              Nog geen hints beschikbaar
+            </div>
+            <ul v-else>
+              <li
+                v-for="(hint, index) in availableHints"
+                :key="index"
+                v-html="hint"
+              />
+            </ul>
+          </b-popover>
+        </div>
+
+        <!-- compass -->
+        <img
+          v-if="!popupImage"
+          :src="require('@/assets/compass.png')"
+          class="compassloc"
+          :style="{
+            opacity: 0.3,
+            transform: `rotate(${compass}deg)`
+          }"
+        />
+        <img
+          v-if="!popupImage"
+          :src="require('@/assets/arrow.png')"
+          class="compassloc"
+          :style="{
+            transform: `rotate(${compass + dir}deg)`
+          }"
+        />
+        <!-- compass -->
+        <img :src="popupImage" v-if="popupImage" class="imageloc" />
+
+        <div class="distance" v-if="!popupImage">
+          {{ distance }} m <br />
+          <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i>
+        </div>
+
+        <div class="answer" v-if="!popupImage && !isCheckpoint">
+          <div v-if="index < numRiddles - 1 && closeEnough">
+            {{ currentQuestion }} <br />
+            <b-form-input
+              type="text"
+              v-model="answer"
+              placeholder="jou antwoord"
+            />
+            <b-button @click="checkAnswer">OK</b-button><br />
+            {{ message }}
+          </div>
+          <p v-else-if="index >= numRiddles - 1">
+            Je bent er bijna, ga naar het laatste punt en vind de schat.
+          </p>
+        </div>
+        <b-button
+          variant="outline-primary"
+          @click="restart"
+          style="position: fixed; right: 0%; bottom: 0%"
+        >
+          Restart
+        </b-button>
+        <b-button
+          variant="outline-primary"
+          @click="openMaps"
+          style="position: fixed; left: 0%; bottom: 0%"
+          v-if="replay"
+        >
+          Maps
+        </b-button>
       </div>
-
-      <!-- compass -->
-      <img
-        v-if="!popupImage"
-        :src="require('@/assets/compass.png')"
-        class="compassloc"
-        :style="{
-          opacity: 0.3,
-          transform: `rotate(${compass}deg)`
-        }"
-      />
-      <img
-        v-if="!popupImage"
-        :src="require('@/assets/arrow.png')"
-        class="compassloc"
-        :style="{
-          transform: `rotate(${compass + dir}deg)`
-        }"
-      />
-      <!-- compass -->
-      <img :src="popupImage" v-if="popupImage" class="imageloc" />
-
-      <div class="distance" v-if="!popupImage">
-        {{ distance }} m <br />
-        <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i>
-      </div>
-
-      <div class="answer" v-if="!popupImage && !isCheckpoint">
-        <div v-if="index < numRiddles - 1 && closeEnough">
-          {{ currentQuestion }} <br />
-          <b-form-input
+      <div v-else-if="name === 'debug'">
+        <div
+          :style="{
+            position: 'fixed',
+            width: '100%',
+            fontSize: 'large',
+            bottom: '30%'
+          }"
+        >
+          latitude: {{ lat }} <br />
+          longitude: {{ lon }} <br />
+          naam: <input type="text" v-model="qname" placeholder="name" /><br />
+          vraag:
+          <input type="text" v-model="question" placeholder="question" /><br />
+          antwoord:
+          <input
             type="text"
             v-model="answer"
             placeholder="jou antwoord"
-          />
-          <b-button @click="checkAnswer">OK</b-button><br />
-          {{ message }}
+          /><br /><br />
+          <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i
+          ><br />
+          <button @click="copyToClipboard">COPY</button><br />
         </div>
-        <p v-else-if="index >= numRiddles - 1">
-          Je bent er bijna, ga naar het laatste punt en vind de schat.
-        </p>
       </div>
-      <b-button
-        variant="outline-primary"
-        @click="restart"
-        style="position: fixed; right: 0%; bottom: 0%"
-      >
-        Restart
-      </b-button>
-      <b-button
-        variant="outline-primary"
-        @click="openMaps"
-        style="position: fixed; left: 0%; bottom: 0%"
-        v-if="replay"
-      >
-        Maps
-      </b-button>
-    </div>
-    <div v-else-if="name === 'debug'">
-      <div
-        :style="{
-          position: 'fixed',
-          width: '100%',
-          fontSize: 'large',
-          bottom: '30%'
-        }"
-      >
-        latitude: {{ lat }} <br />
-        longitude: {{ lon }} <br />
-        naam: <input type="text" v-model="qname" placeholder="name" /><br />
-        vraag:
-        <input type="text" v-model="question" placeholder="question" /><br />
-        antwoord:
-        <input
-          type="text"
-          v-model="answer"
-          placeholder="jou antwoord"
-        /><br /><br />
-        <i style="font-size: small">{{ Math.floor(accuracy) }} m nauwkeurig</i
-        ><br />
-        <button @click="copyToClipboard">COPY</button><br />
+      <div v-else>
+        <div class="errorling">Onbekende link</div>
       </div>
     </div>
-    <div v-else>
-      <div class="errorling">Onbekende link</div>
+    <div v-else style="position: fixed; width: 100%; top: 30%;">
+      Zet je geluid aan voor extra effect!<br>
+      Ben je er klaar voor?
+      <br>
+      <b-button @click="startTheGame" variant="success">KLAAR !</b-button><br />
     </div>
   </div>
 </template>
@@ -157,6 +165,7 @@ export default Vue.extend({
   data: () => ({
     lat: 0,
     lon: 0,
+    started: false,
     compass: 0,
     absolute: false,
     dir: 0,
@@ -334,7 +343,7 @@ export default Vue.extend({
       return false;
     },
     audioUrl (): string {
-      if (this.config && this.config.introAudio && this.time < 15) {
+      if (this.config && this.config.introAudio) {
         return this.config.introAudio;
       }
       if (this.currentRiddle && this.currentRiddle.closeAudio && this.closeEnough) {
@@ -454,6 +463,11 @@ export default Vue.extend({
     },
     openMaps () {
       window.open(this.mapsLink, '_blank')
+    },
+    startTheGame () {
+      console.log('Starting')
+      this.started = true;
+      this.time = 0;
     }
   },
 });
